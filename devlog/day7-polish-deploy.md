@@ -6,6 +6,8 @@
 - 增加加载、成功、错误和空状态。
 - 增加 Vitest、React Testing Library 和 DeepSeek 客户端测试。
 - 提供模拟 API 模式和 Vercel 完整开发命令。
+- 提供 macOS 双击启动器和无需 Vercel 登录的本地真实 API 模式。
+- 模拟模式改为按输入动态生成 3-8 张卡片，不再固定两张。
 - 更新 README、架构、Prompt 文档和 Roadmap。
 
 ## 待完成

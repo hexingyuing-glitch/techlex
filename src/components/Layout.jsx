@@ -4,6 +4,8 @@ export default function Layout({
   onModeChange,
   cardCount,
 }) {
+  const isMockMode = import.meta.env.VITE_USE_MOCK_API === 'true'
+
   return (
     <div className="app-shell">
       <header className="site-header">
@@ -21,6 +23,7 @@ export default function Layout({
         </a>
 
         <nav className="mode-switch" aria-label="主导航">
+          {isMockMode ? <span className="mode-badge">动态演示</span> : null}
           <button
             type="button"
             className={mode === 'library' ? 'active' : ''}
@@ -45,7 +48,7 @@ export default function Layout({
 
       <footer className="site-footer">
         <span>TechLex / Local-first vocabulary practice</span>
-        <span>Powered by DeepSeek</span>
+        <span>{isMockMode ? 'Dynamic local demo' : 'Powered by DeepSeek'}</span>
       </footer>
     </div>
   )

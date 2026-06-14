@@ -79,8 +79,16 @@ export default function QuizMode({ cards, onReview, onBack }) {
 
       <article className="quiz-card">
         <div className="quiz-number">?</div>
+        <p className="quiz-translation">
+          {currentCard.translation || '根据下面的双语解释作答'}
+        </p>
+        <p className="quiz-definition-zh">
+          {currentCard.definitionZh || '中文解释待补充'}
+        </p>
         <p className="quiz-definition">{currentCard.definition}</p>
-        <p className="quiz-context">{currentCard.context}</p>
+        <p className="quiz-context">
+          {currentCard.contextZh || currentCard.context}
+        </p>
         <blockquote>{maskTerm(currentCard.example, currentCard.term)}</blockquote>
 
         <form onSubmit={handleSubmit}>

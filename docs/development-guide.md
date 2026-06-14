@@ -28,7 +28,8 @@
 
 ## 3. 根目录为什么需要这些文件
 
-- `index.html`：浏览器先加载它，React 最终挂载到 `#root`。
+- `index.html`：Vite 服务器加载它，React 最终挂载到 `#root`。不能通过 Finder 双击直接运行。
+- `启动TechLex.command`：供 macOS 用户双击启动，自动选择模式并打开浏览器。
 - `package.json`：记录依赖、Node 版本和 `dev/build/test` 命令。
 - `package-lock.json`：锁定依赖版本，保证不同电脑安装结果一致。
 - `vite.config.js`：启用 React、Tailwind 和 Vitest。
@@ -44,7 +45,7 @@
 - `Layout.jsx`：网站框架和卡片库/复习模式导航。
 - `InputPanel.jsx`：文本输入、长度、空值和提交状态。
 - `CardList.jsx`：遍历卡片和显示空状态。
-- `CardItem.jsx`：显示一张卡片及其统计。
+- `CardItem.jsx`：显示一张中英双语卡片及其统计。
 - `QuizMode.jsx`：答案输入、结果反馈和下一题。
 - `apiClient.js`：统一 POST 请求、超时、网络错误和模拟模式。
 - `termExtractor.js`：校验术语列表、去重并限制最多 8 项。
@@ -59,6 +60,7 @@
 - `api/_response.js`：统一成功和错误 JSON 响应。
 - `server/deepseekClient.js`：调用 DeepSeek，处理超时和状态码。
 - `server/promptTemplates.js`：运行时 Prompt，需与 `prompts/` 文档同步。
+- `server/localDev.js`：无需 Vercel 登录，在本机同时启动 Vite 和真实 API。
 
 `DEEPSEEK_API_KEY` 只在服务端读取。任何 `VITE_*` 变量都会进入浏览器，因此不能用于保存秘密。
 
@@ -69,7 +71,7 @@
 3. 阅读 `App.jsx`，跟踪 `cards` state 如何流向 `CardList`。
 4. 阅读 `localStore.test.js`，再阅读对应实现。
 5. 阅读 `spacedRepetition.test.js`，理解纯函数为什么容易测试。
-6. 在 `.env` 使用 `VITE_USE_MOCK_API=true`，走一次完整模拟流程。
+6. 双击 `启动TechLex.command`，选择动态演示模式，走一次完整流程。
 7. 最后阅读 `api/` 和 `server/`，理解浏览器为什么不能保存 API Key。
 
 ## 7. 固定开发步骤
@@ -91,8 +93,9 @@
 npm install
 cp .env.example .env
 npm run dev
+npm run dev:real
 npm test
 npm run build
 ```
 
-模拟模式只需要 Vite。真实 DeepSeek 调用需要 `npm run dev:full`，并在服务端配置 `DEEPSEEK_API_KEY`。
+模拟模式只需要 Vite。真实 DeepSeek 调用可使用 `npm run dev:real`；部署前再使用 `npm run dev:full` 验证 Vercel Functions。

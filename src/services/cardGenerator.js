@@ -1,9 +1,13 @@
 import { postJson } from './apiClient.js'
 
 const FIELD_LIMITS = {
+  translation: 200,
   definition: 600,
+  definitionZh: 600,
   example: 600,
+  exampleZh: 600,
   context: 600,
+  contextZh: 600,
 }
 
 function cleanField(data, field) {
@@ -31,9 +35,13 @@ export async function generateCard(term, contextSentence) {
   return {
     id: crypto.randomUUID(),
     term: cleanTerm,
+    translation: cleanField(data, 'translation'),
     definition: cleanField(data, 'definition'),
+    definitionZh: cleanField(data, 'definitionZh'),
     example: cleanField(data, 'example'),
+    exampleZh: cleanField(data, 'exampleZh'),
     context: cleanField(data, 'context'),
+    contextZh: cleanField(data, 'contextZh'),
     sourceSentence: cleanSentence.slice(0, 1000),
     createdAt: new Date().toISOString(),
     reviewWeight: 1,

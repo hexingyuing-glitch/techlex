@@ -16,10 +16,19 @@ describe('localStore', () => {
     expect(getCards()).toEqual([])
   })
 
-  it('adds cards and skips exact term/source duplicates', () => {
+  it('refreshes bilingual content while preserving duplicate review state', () => {
     addCards([sampleCard])
-    const cards = addCards([{ ...sampleCard, id: 'other-id' }])
+    const cards = addCards([
+      {
+        ...sampleCard,
+        id: 'other-id',
+        definitionZh: '更新后的中文解释。',
+        reviewWeight: 1,
+      },
+    ])
     expect(cards).toHaveLength(1)
+    expect(cards[0].id).toBe(sampleCard.id)
+    expect(cards[0].definitionZh).toBe('更新后的中文解释。')
   })
 
   it('updates and deletes a card', () => {

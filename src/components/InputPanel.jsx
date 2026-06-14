@@ -9,6 +9,7 @@ export default function InputPanel({
   error,
   notice,
 }) {
+  const isMockMode = import.meta.env.VITE_USE_MOCK_API === 'true'
   const [text, setText] = useState('')
   const [validationError, setValidationError] = useState('')
 
@@ -34,6 +35,13 @@ export default function InputPanel({
         </div>
         <p>建议使用 README、API 文档或技术博客中的 100-800 个英文单词。</p>
       </div>
+
+      {isMockMode ? (
+        <p className="demo-explainer">
+          当前为动态演示模式：会根据输入生成 3-8 张双语卡片，但未收录词汇的中文解释是演示内容。需要精确 AI
+          解释时，请通过启动器选择真实 DeepSeek 模式。
+        </p>
+      ) : null}
 
       <form onSubmit={handleSubmit}>
         <label className="sr-only" htmlFor="source-text">

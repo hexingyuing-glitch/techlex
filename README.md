@@ -7,7 +7,7 @@ TechLex 把“阅读英文技术文档”和“积累专业英语”合并成一
 ## 当前功能
 
 - 从英文技术文本中提取最多 8 个专业术语或固定表达
-- 为每个术语生成定义、例句和应用场景
+- 为每个术语生成中文术语、双语定义、双语例句和双语应用场景
 - 使用 localStorage 保存、读取和删除卡片
 - 通过“看定义猜术语”进行复习
 - 答错提高复习权重，答对降低复习权重
@@ -26,6 +26,14 @@ TechLex 把“阅读英文技术文档”和“积累专业英语”合并成一
 
 要求 Node.js 24 或更高版本。
 
+最简单的方式是在 macOS Finder 中双击：
+
+```text
+启动TechLex.command
+```
+
+启动器会让你选择动态演示模式或真实 DeepSeek 模式，并自动打开浏览器。不要双击 `index.html`；React 源码必须经过 Vite 编译，直接通过 `file://` 打开无法运行。
+
 ```bash
 git clone https://github.com/你的用户名/techlex.git
 cd techlex
@@ -40,11 +48,11 @@ npm run dev
 VITE_USE_MOCK_API=true
 ```
 
-此模式不发送真实请求，适合开发 UI、存储和复习流程。
+此模式不发送真实请求，会根据输入动态选择 3-8 个表达。内置技术词汇提供完整中英解释，其他动态词汇会明确标注为演示释义。
 
 ## 使用真实 DeepSeek API
 
-真实密钥只能放在服务端变量中，不能使用 `VITE_` 前缀。`npm run dev:full` 会固定关闭模拟模式：
+真实密钥只能放在服务端变量中，不能使用 `VITE_` 前缀。无需 Vercel 登录即可运行本地真实模式：
 
 ```env
 VITE_USE_MOCK_API=false
@@ -53,18 +61,17 @@ DEEPSEEK_BASE_URL=https://api.deepseek.com
 DEEPSEEK_MODEL=deepseek-v4-flash
 ```
 
-首次运行时 `npx` 会按需下载 Vercel CLI。登录后运行完整前后端：
-
 ```bash
-npm run dev:full
+npm run dev:real
 ```
 
-部署时在 Vercel 项目设置中配置 `DEEPSEEK_API_KEY`。不要把真实 `.env` 提交到 Git。
+`npm run dev:full` 仍用于 Vercel CLI 环境。部署时在 Vercel 项目设置中配置 `DEEPSEEK_API_KEY`。不要把真实 `.env` 提交到 Git。
 
 ## 常用命令
 
 ```bash
 npm run dev       # Vite 前端开发服务器
+npm run dev:real  # 本地前端 + 真实 DeepSeek API
 npm run dev:full  # Vercel 前端 + Functions
 npm test          # 自动测试
 npm run build     # 生产构建

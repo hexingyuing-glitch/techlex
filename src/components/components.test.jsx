@@ -21,6 +21,7 @@ describe('main components', () => {
     expect(screen.getByText('卡片库还是空的')).toBeInTheDocument()
 
     rerender(<CardList cards={[sampleCard]} onDelete={onDelete} />)
+    expect(screen.getByText('重复执行时产生相同结果。')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /删除术语/ }))
     expect(onDelete).toHaveBeenCalledWith(sampleCard.id)
   })

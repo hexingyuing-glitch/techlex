@@ -55,14 +55,34 @@ export function saveCards(cards, storage) {
 
 export function addCards(newCards, storage) {
   const existing = getCards(storage)
-  const keys = new Set(existing.map(cardKey))
-  const uniqueNewCards = newCards.filter((card) => {
+  const existingByKey = new Map(existing.map((card) => [cardKey(card), card]))
+  const refreshedKeys = new Set()
+  const nextNewCards = []
+
+  newCards.forEach((card) => {
     const key = cardKey(card)
-    if (keys.has(key)) return false
-    keys.add(key)
-    return true
+    const previous = existingByKey.get(key)
+    refreshedKeys.add(key)
+    nextNewCards.push(
+      previous
+        ? {
+            ...previous,
+            ...card,
+            id: previous.id,
+            createdAt: previous.createdAt,
+            reviewWeight: previous.reviewWeight,
+            wrongCount: previous.wrongCount,
+            correctCount: previous.correctCount,
+            lastReviewedAt: previous.lastReviewedAt,
+          }
+        : card,
+    )
   })
-  return saveCards([...uniqueNewCards, ...existing], storage)
+
+  return saveCards(
+    [...nextNewCards, ...existing.filter((card) => !refreshedKeys.has(cardKey(card)))],
+    storage,
+  )
 }
 
 export function updateCard(updatedCard, storage) {

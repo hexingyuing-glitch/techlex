@@ -4,7 +4,8 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "VITE_USE_MOCK_API=true vite",
+    "dev": "VITE_USE_MOCK_API=true vite --host 127.0.0.1 --strictPort",
+    "dev:real": "VITE_USE_MOCK_API=false node --env-file-if-exists=.env server/localDev.js",
     "dev:full": "VITE_USE_MOCK_API=false npx vercel dev",
     "build": "vite build",
     "preview": "vite preview",

@@ -36,13 +36,17 @@ export default {
     try {
       const result = await requestDeepSeekJson(
         buildGenerateCardMessages(term, contextSentence),
-        { maxTokens: 1000 },
+        { maxTokens: 1600 },
       )
 
       if (
+        !isNonEmptyString(result?.translation) ||
         !isNonEmptyString(result?.definition) ||
+        !isNonEmptyString(result?.definitionZh) ||
         !isNonEmptyString(result?.example) ||
-        !isNonEmptyString(result?.context)
+        !isNonEmptyString(result?.exampleZh) ||
+        !isNonEmptyString(result?.context) ||
+        !isNonEmptyString(result?.contextZh)
       ) {
         return json(
           {
@@ -57,9 +61,13 @@ export default {
 
       return json({
         term,
+        translation: result.translation.trim(),
         definition: result.definition.trim(),
+        definitionZh: result.definitionZh.trim(),
         example: result.example.trim(),
+        exampleZh: result.exampleZh.trim(),
         context: result.context.trim(),
+        contextZh: result.contextZh.trim(),
       })
     } catch (error) {
       return errorResponse(error)

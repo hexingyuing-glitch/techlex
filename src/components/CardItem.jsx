@@ -14,16 +14,31 @@ export default function CardItem({ card, index, onDelete }) {
       </div>
 
       <h3>{card.term}</h3>
-      <p className="definition">{card.definition}</p>
+      <p className="translation">
+        {card.translation || '中文释义待补充'}
+      </p>
 
       <dl>
         <div>
-          <dt>EXAMPLE</dt>
-          <dd>{card.example}</dd>
+          <dt>DEFINITION / 释义</dt>
+          <dd>{card.definition}</dd>
+          <dd className="chinese-copy">
+            {card.definitionZh || '这是一张旧卡片，尚未包含中文解释。'}
+          </dd>
         </div>
         <div>
-          <dt>WHEN TO USE</dt>
+          <dt>EXAMPLE / 例句</dt>
+          <dd>{card.example}</dd>
+          <dd className="chinese-copy">
+            {card.exampleZh || '中文译文待补充。'}
+          </dd>
+        </div>
+        <div>
+          <dt>WHEN TO USE / 使用场景</dt>
           <dd>{card.context}</dd>
+          <dd className="chinese-copy">
+            {card.contextZh || '中文场景说明待补充。'}
+          </dd>
         </div>
         {card.sourceSentence ? (
           <div className="source-row">
