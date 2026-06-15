@@ -2,70 +2,98 @@
 
 面向技术学习者的英语术语结构化学习工具。
 
-## 这是什么
+TechLex 把“阅读英文技术文档”和“积累专业英语”合并成一个动作：粘贴 README、API 文档或技术文章片段，应用会通过 DeepSeek 提取关键表达、生成结构化卡片，并用简单的加权复习机制帮助你巩固记忆。
 
-TechLex 帮助开发者和技术学习者把"阅读英文技术文档"和"学习专业英语"合并成同一个动作。粘贴一段英文技术文档、API说明或博客片段,系统会自动提取专业术语,生成"定义 + 例句 + 应用场景"的结构化卡片,并通过交互式问答帮你巩固记忆。
+## 当前功能
 
-## 解决什么问题
-
-很多非英语母语的开发者能看懂英文文档,但自己写代码注释、commit message、技术文章时,表达不够地道,词汇停留在"认识但不会用"的阶段。市面上的语言学习App大多聚焦日常场景词汇,对这类专业、垂直的英语表达需求覆盖不足。TechLex 专注于这个细分场景。
-
-## 功能
-
-- **术语提取**:粘贴英文技术文本,自动识别其中的专业术语和高频表达
-- **卡片生成**:为每个术语生成定义、例句和应用场景说明
-- **交互式复习**:基于简单的间隔重复机制,优先复习你容易出错的术语
+- 从英文技术文本中提取最多 8 个专业术语或固定表达
+- 为每个术语生成中文术语、双语定义、双语例句和双语应用场景
+- 使用 localStorage 保存、读取和删除卡片
+- 通过“看定义猜术语”进行复习
+- 答错提高复习权重，答对降低复习权重
+- 支持无 API 费用的本地模拟模式
+- 通过 Vercel Functions 安全调用 DeepSeek，密钥不进入浏览器
 
 ## 技术栈
 
-- 前端:React + Vite + Tailwind CSS
-- AI能力:Claude API(用于术语提取与卡片生成)
-- 数据存储:浏览器本地存储(localStorage),无需后端和数据库
+- React + Vite + Tailwind CSS
+- DeepSeek JSON Output API
+- Vercel Functions
+- localStorage
+- Vitest + React Testing Library
 
-## 快速开始
+## 本地运行
 
-### 在线使用
+要求 Node.js 24 或更高版本。
 
-访问 [在线demo链接占位] ,在设置中填入你自己的 Claude API key 即可使用。
+最简单的方式是在 macOS Finder 中双击：
 
-### 本地运行
+```text
+启动TechLex.command
+```
+
+启动器会让你选择动态演示模式或真实 DeepSeek 模式，并自动打开浏览器。不要双击 `index.html`；React 源码必须经过 Vite 编译，直接通过 `file://` 打开无法运行。
 
 ```bash
 git clone https://github.com/你的用户名/techlex.git
 cd techlex
 npm install
 cp .env.example .env
-# 编辑 .env,填入你自己的 CLAUDE_API_KEY
 npm run dev
 ```
 
-## 关于 API Key
+`npm run dev` 会固定启用模拟 API，因此不会发送真实请求：
 
-TechLex 不内置任何 API key,也不会代为承担调用费用。你需要使用自己的 Claude API key,key 仅保存在你本地的环境变量或浏览器本地存储中,不会上传到任何服务器。获取 API key 请前往 [Anthropic Console](https://console.anthropic.com)。
+```env
+VITE_USE_MOCK_API=true
+```
+
+此模式不发送真实请求，会根据输入动态选择 3-8 个表达。内置技术词汇提供完整中英解释，其他动态词汇会明确标注为演示释义。
+
+## 使用真实 DeepSeek API
+
+真实密钥只能放在服务端变量中，不能使用 `VITE_` 前缀。无需 Vercel 登录即可运行本地真实模式：
+
+```env
+VITE_USE_MOCK_API=false
+DEEPSEEK_API_KEY=your_deepseek_api_key
+DEEPSEEK_BASE_URL=https://api.deepseek.com
+DEEPSEEK_MODEL=deepseek-v4-flash
+```
+
+```bash
+npm run dev:real
+```
+
+`npm run dev:full` 仍用于 Vercel CLI 环境。部署时在 Vercel 项目设置中配置 `DEEPSEEK_API_KEY`。不要把真实 `.env` 提交到 Git。
+
+## 常用命令
+
+```bash
+npm run dev       # Vite 前端开发服务器
+npm run dev:real  # 本地前端 + 真实 DeepSeek API
+npm run dev:full  # Vercel 前端 + Functions
+npm test          # 自动测试
+npm run build     # 生产构建
+npm run preview   # 预览生产构建
+```
 
 ## 项目结构
 
+```text
+api/        Vercel 服务端接口
+server/     DeepSeek 客户端和运行时 Prompt
+src/        React 页面、服务、存储与复习逻辑
+prompts/    Prompt 设计和迭代记录
+docs/       架构、路线图与初学者指南
+devlog/     开发过程记录
 ```
-techlex/
-├── docs/          # 设计文档与开发计划
-├── devlog/        # 开发日志,记录每一步的思路与问题
-├── prompts/       # 术语提取与卡片生成所用的 Prompt 模板
-└── src/           # 前端源码
-```
 
-详见 [docs/design.md](docs/design.md)。
+第一次开发完整项目，请先阅读 [初学者开发指南](docs/development-guide.md)。核心架构取舍见 [设计思路](docs/design.md)，后续计划见 [Roadmap](docs/roadmap.md)。
 
-## Roadmap
+## 数据与隐私
 
-- [ ] 支持从文件/URL导入文本
-- [ ] 英文技术写作辅助(中文描述生成地道英文表达)
-- [ ] 导出为 Anki 等格式
-
-日常场景英语词汇暂不在本项目范围内,聚焦专业与技术英语。
-
-## 项目背景
-
-这是作者在学习 Agent 开发过程中,为解决自己"阅读英文技术文档时积累专业词汇"这一真实需求而做的小项目,同时作为练习 Agent/Prompt 设计能力的练兵场。开发过程记录见 [devlog](devlog/)。
+卡片保存在当前浏览器的 `techlex.cards.v1` localStorage 中。清理浏览器数据、切换浏览器或设备后不会自动同步。用户粘贴的文本会在真实 API 模式下发送给 DeepSeek 处理。
 
 ## License
 

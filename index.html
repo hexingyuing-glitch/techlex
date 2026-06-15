@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="TechLex 将英文技术文档转换为可复习的专业术语卡片。"
+    />
+    <meta name="theme-color" content="#07111f" />
+    <title>TechLex · 技术英语卡片</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script>
+      if (window.location.protocol === 'file:') {
+        document.getElementById('root').innerHTML = `
+          <main style="max-width:720px;margin:80px auto;padding:40px;font-family:system-ui;color:#dce7f4;background:#07111f;border:1px solid #294057">
+            <h1 style="margin-top:0">TechLex 不能通过双击 index.html 运行</h1>
+            <p style="line-height:1.8;color:#a9b8c8">这是 React + Vite 项目，源代码必须先由开发服务器编译。</p>
+            <p style="line-height:1.8;color:#48e0bb">请返回项目文件夹，双击「启动TechLex.command」。</p>
+            <p style="line-height:1.8;color:#8296aa">也可以在终端进入项目目录后运行：<code>npm run dev</code></p>
+          </main>
+        `
+      }
+    </script>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

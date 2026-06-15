@@ -1,0 +1,17 @@
+export const sampleCard = {
+  id: 'card-1',
+  term: 'idempotent',
+  translation: '幂等',
+  definition: 'Producing the same result when repeated.',
+  definitionZh: '重复执行时产生相同结果。',
+  example: 'The endpoint is idempotent and safe to retry.',
+  exampleZh: '该接口具有幂等性，可以安全重试。',
+  context: 'Used when discussing API retry behavior.',
+  contextZh: '用于讨论 API 重试行为。',
+  sourceSentence: 'PUT requests should be idempotent.',
+  createdAt: '2026-06-14T00:00:00.000Z',
+  reviewWeight: 1,
+  wrongCount: 0,
+  correctCount: 0,
+  lastReviewedAt: null,
+}
