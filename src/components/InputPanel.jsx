@@ -1,99 +1,95 @@
 import { useState } from 'react'
+import Icon from './Icon.jsx'
 
-const MAX_TEXT_LENGTH = 12000
+export const EXAMPLE_TEXT =
+  'Distributed systems must handle a transient failure without losing data. An idempotent operation can be retried safely after network timeouts. Clients use exponential backoff to avoid overwhelming a busy service. Rate limiting protects the API from sudden traffic spikes.'
 
 export default function InputPanel({
   onSubmit,
   isLoading,
-  progress,
-  error,
-  notice,
+  text: controlledText,
+  onTextChange,
 }) {
-  const isMockMode = import.meta.env.VITE_USE_MOCK_API === 'true'
-  const [text, setText] = useState('')
+  const [localText, setLocalText] = useState('')
   const [validationError, setValidationError] = useState('')
-
-  function handleSubmit(event) {
+  const text = controlledText ?? localText
+  const setText = onTextChange || setLocalText
+  const words = text.trim() ? text.trim().split(/\s+/).length : 0
+  function submit(event) {
     event.preventDefault()
-    const cleanText = text.trim()
-
-    if (!cleanText) {
+    if (!text.trim()) {
       setValidationError('请先粘贴一段英文技术文本。')
       return
     }
-
     setValidationError('')
-    onSubmit(cleanText)
+    onSubmit(text.trim())
   }
-
   return (
-    <section className="input-panel" aria-labelledby="input-title">
-      <div className="section-heading">
+    <section className="panel source-panel" aria-labelledby="input-title">
+      <div className="panel-heading">
         <div>
-          <p className="step-label">STEP 01 / SOURCE</p>
-          <h2 id="input-title">粘贴技术文本</h2>
+          <span className="step-number">01</span>
+          <h2 id="input-title">从一段阅读开始</h2>
         </div>
-        <p>建议使用 README、API 文档或技术博客中的 100-800 个英文单词。</p>
+        <span className="quiet-label">SOURCE TEXT</span>
       </div>
-
-      {isMockMode ? (
-        <p className="demo-explainer">
-          当前为动态演示模式：会根据输入生成 3-8 张双语卡片，但未收录词汇的中文解释是演示内容。需要精确 AI
-          解释时，请通过启动器选择真实 DeepSeek 模式。
-        </p>
-      ) : null}
-
-      <form onSubmit={handleSubmit}>
-        <label className="sr-only" htmlFor="source-text">
+      <p className="panel-description">
+        粘贴 README、API 文档或技术文章中的英文片段。
+      </p>
+      <form onSubmit={submit}>
+        <label htmlFor="source-text" className="sr-only">
           英文技术文本
         </label>
         <textarea
           id="source-text"
           value={text}
-          maxLength={MAX_TEXT_LENGTH}
+          maxLength={12000}
           disabled={isLoading}
-          onChange={(event) => {
-            setText(event.target.value)
-            if (validationError) setValidationError('')
+          onChange={(e) => {
+            setText(e.target.value)
+            setValidationError('')
           }}
-          placeholder="Paste an English README, API reference, or technical article here…"
+          placeholder={
+            '好的表达，藏在你正在读的文档里。\n\nPaste your English text here…'
+          }
         />
-
-        <div className="input-actions">
-          <span className="character-count">
-            {text.length.toLocaleString()} / {MAX_TEXT_LENGTH.toLocaleString()}
+        <div className="source-tools">
+          <button
+            className="text-button"
+            type="button"
+            disabled={isLoading}
+            onClick={() => {
+              setText(EXAMPLE_TEXT)
+              setValidationError('')
+            }}
+          >
+            试试示例文本 <span aria-hidden="true">↗</span>
+          </button>
+          <span>
+            {words} 词 · {text.length.toLocaleString()} / 12,000 字符
           </span>
-          <button className="primary-button" type="submit" disabled={isLoading}>
+        </div>
+        <div className="source-submit">
+          <p>
+            建议 100–800 个英文单词
+            <br />
+            <span>每次最多提取 8 个表达</span>
+          </p>
+          <button className="primary-button" disabled={isLoading}>
             {isLoading ? (
-              <>
-                <span className="spinner" aria-hidden="true" />
-                正在生成
-              </>
+              <span className="spinner" />
             ) : (
-              <>
-                提取术语并生成卡片
-                <span aria-hidden="true">↗</span>
-              </>
+              <Icon name="spark" size={17} />
             )}
+            {isLoading ? '处理中…' : '提取术语'}
           </button>
         </div>
       </form>
-
-      {isLoading && progress ? (
-        <p className="status-message loading" role="status">
-          {progress}
+      {validationError && (
+        <p className="inline-error" role="alert">
+          {validationError}
         </p>
-      ) : null}
-      {validationError || error ? (
-        <p className="status-message error" role="alert">
-          {validationError || error}
-        </p>
-      ) : null}
-      {!isLoading && notice ? (
-        <p className="status-message success" role="status">
-          {notice}
-        </p>
-      ) : null}
+      )}
     </section>
   )
 }

@@ -33,7 +33,22 @@ export function getCards(storage) {
     if (!Array.isArray(cards)) {
       throw new TypeError('Stored cards must be an array.')
     }
-    return cards
+    if (
+      cards.some(
+        (card) =>
+          !card ||
+          typeof card.id !== 'string' ||
+          typeof card.term !== 'string' ||
+          !card.term.trim() ||
+          typeof card.definition !== 'string',
+      )
+    ) {
+      throw new TypeError('Invalid stored card.')
+    }
+    return cards.map((card) => ({
+      ...card,
+      contentSource: card.contentSource || 'unknown',
+    }))
   } catch (error) {
     throw new StorageError('无法读取本地卡片库。', error)
   }
@@ -61,6 +76,7 @@ export function addCards(newCards, storage) {
 
   newCards.forEach((card) => {
     const key = cardKey(card)
+    if (refreshedKeys.has(key)) return
     const previous = existingByKey.get(key)
     refreshedKeys.add(key)
     nextNewCards.push(
@@ -80,7 +96,10 @@ export function addCards(newCards, storage) {
   })
 
   return saveCards(
-    [...nextNewCards, ...existing.filter((card) => !refreshedKeys.has(cardKey(card)))],
+    [
+      ...nextNewCards,
+      ...existing.filter((card) => !refreshedKeys.has(cardKey(card))),
+    ],
     storage,
   )
 }
@@ -99,4 +118,77 @@ export function deleteCard(cardId, storage) {
     cards.filter((card) => card.id !== cardId),
     storage,
   )
+}
+
+export function parseBackup(text) {
+  let data
+  try {
+    data = JSON.parse(text)
+  } catch {
+    throw new StorageError('文件不是有效的 JSON，请选择 TechLex 备份。')
+  }
+  if (
+    !Array.isArray(data) &&
+    (data?.format !== 'techlex' || data?.version !== 1)
+  ) {
+    throw new StorageError('不支持此备份格式或版本。')
+  }
+  const cards = Array.isArray(data) ? data : data.cards
+  if (!Array.isArray(cards) || cards.length > 5000) {
+    throw new StorageError('备份必须包含卡片数组，且不超过 5,000 张。')
+  }
+  return cards.map((card, index) => {
+    if (
+      !card ||
+      typeof card.term !== 'string' ||
+      !card.term.trim() ||
+      typeof card.definition !== 'string' ||
+      !card.definition.trim()
+    ) {
+      throw new StorageError(
+        '第 ' + (index + 1) + ' 张卡片缺少术语或英文释义，未导入任何数据。',
+      )
+    }
+    const result = { id: crypto.randomUUID() }
+    for (const field of [
+      'term',
+      'translation',
+      'definition',
+      'definitionZh',
+      'example',
+      'exampleZh',
+      'context',
+      'contextZh',
+      'sourceSentence',
+    ]) {
+      if (card[field] != null && typeof card[field] !== 'string') {
+        throw new StorageError(
+          '第 ' + (index + 1) + ' 张卡片的 ' + field + ' 字段格式不正确。',
+        )
+      }
+      result[field] = (card[field] || '')
+        .trim()
+        .slice(0, field === 'term' ? 200 : 2000)
+    }
+    result.contentSource = ['ai', 'demo', 'placeholder', 'unknown'].includes(
+      card.contentSource,
+    )
+      ? card.contentSource
+      : 'unknown'
+    result.createdAt = Number.isFinite(Date.parse(card.createdAt))
+      ? card.createdAt
+      : new Date().toISOString()
+    result.lastReviewedAt = Number.isFinite(Date.parse(card.lastReviewedAt))
+      ? card.lastReviewedAt
+      : null
+    for (const field of ['correctCount', 'wrongCount']) {
+      result[field] = Number.isFinite(Number(card[field]))
+        ? Math.max(0, Math.floor(Number(card[field])))
+        : 0
+    }
+    result.reviewWeight = Number.isFinite(Number(card.reviewWeight))
+      ? Math.min(5, Math.max(0.25, Number(card.reviewWeight)))
+      : 1
+    return result
+  })
 }

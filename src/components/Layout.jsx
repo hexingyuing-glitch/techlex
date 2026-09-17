@@ -1,55 +1,101 @@
+import Icon from './Icon.jsx'
+
 export default function Layout({
   children,
   mode,
   onModeChange,
   cardCount,
+  reviewCount,
 }) {
-  const isMockMode = import.meta.env.VITE_USE_MOCK_API === 'true'
-
+  const demo = import.meta.env.VITE_USE_MOCK_API === 'true'
+  const tabs = [
+    ['extract', '提取新词', 'spark'],
+    ['library', '我的词库', 'book'],
+    ['quiz', '今日复习', 'review'],
+  ]
   return (
     <div className="app-shell">
-      <header className="site-header">
+      <a
+        className="skip-link"
+        href="#main-content"
+        onClick={(event) => {
+          event.preventDefault()
+          document.getElementById('main-content')?.focus()
+        }}
+      >
+        跳到主要内容
+      </a>
+      <aside className="sidebar">
         <a
           className="brand"
-          href="#top"
-          onClick={() => onModeChange('library')}
-          aria-label="返回 TechLex 卡片库"
+          href="#extract"
+          onClick={() => onModeChange('extract')}
+          aria-label="TechLex 首页"
         >
-          <span className="brand-mark">TL</span>
+          <span className="brand-mark">
+            <Icon name="book" size={24} />
+          </span>
           <span>
-            <strong>TechLex</strong>
-            <small>TECHNICAL ENGLISH LAB</small>
+            <strong>
+              TechLex<span className="brand-dot">.</span>
+            </strong>
+            <small>技术英语学习笔记</small>
           </span>
         </a>
-
-        <nav className="mode-switch" aria-label="主导航">
-          {isMockMode ? <span className="mode-badge">动态演示</span> : null}
-          <button
-            type="button"
-            className={mode === 'library' ? 'active' : ''}
-            onClick={() => onModeChange('library')}
-          >
-            卡片库
-          </button>
-          <button
-            type="button"
-            className={mode === 'quiz' ? 'active' : ''}
-            onClick={() => onModeChange('quiz')}
-          >
-            复习模式
-            <span>{cardCount}</span>
-          </button>
+        <div className="nav-label">你的学习空间</div>
+        <nav aria-label="主导航">
+          {tabs.map(([key, label, icon]) => (
+            <button
+              key={key}
+              className={'nav-item ' + (mode === key ? 'active' : '')}
+              onClick={() => onModeChange(key)}
+              aria-current={mode === key ? 'page' : undefined}
+            >
+              <Icon name={icon} />
+              <span>{label}</span>
+              {key !== 'extract' && (
+                <span className="nav-count">
+                  {key === 'library' ? cardCount : reviewCount}
+                </span>
+              )}
+            </button>
+          ))}
         </nav>
-      </header>
-
-      <main id="top" className="page-content">
-        {children}
-      </main>
-
-      <footer className="site-footer">
-        <span>TechLex / Local-first vocabulary practice</span>
-        <span>{isMockMode ? 'Dynamic local demo' : 'Powered by DeepSeek'}</span>
-      </footer>
+        <div className="sidebar-note">
+          <Icon name="leaf" size={26} />
+          <p>
+            让每一次阅读，
+            <br />
+            都有一点积累。
+          </p>
+          <small>
+            从真实语境中学习，
+            <br />
+            在下一次表达中用出来。
+          </small>
+        </div>
+        <div className="local-note">
+          <span className="status-dot" /> 保存在此浏览器{' '}
+          <small>无需账号 · 记得定期备份</small>
+        </div>
+      </aside>
+      <div className="workspace">
+        <header className="topbar">
+          <span>
+            学习空间 <span className="crumb">/</span>{' '}
+            <strong>{tabs.find(([key]) => key === mode)?.[1]}</strong>
+          </span>
+          <span className={'mode-pill ' + (demo ? 'demo' : '')}>
+            <span className="status-dot" />
+            {demo ? '演示模式' : 'AI 模式'}
+          </span>
+        </header>
+        <main id="main-content" tabIndex={-1}>{children}</main>
+        <footer className="site-footer">
+          <span>少一点死记硬背，多一点真实语境。</span>
+          <span>TECHLEX · READ. KEEP. RECALL.</span>
+        </footer>
+      </div>
     </div>
   )
 }

@@ -221,7 +221,11 @@ async function mockRequest(path, body) {
     MOCK_GLOSSARY[body.term.toLocaleLowerCase()] ??
     buildGenericMockCard(body.term, body.context_sentence)
 
-  return { term: body.term, ...content }
+  return {
+    term: body.term,
+    ...content,
+    contentSource: MOCK_GLOSSARY[body.term.toLocaleLowerCase()] ? 'demo' : 'placeholder',
+  }
 }
 
 export async function postJson(path, body, { timeout = 35000 } = {}) {
