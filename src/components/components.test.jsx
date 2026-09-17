@@ -36,7 +36,7 @@ describe('main components', () => {
     expect(
       screen.getByText('The endpoint is ________ and safe to retry.'),
     ).toBeInTheDocument()
-    await user.type(screen.getByLabelText('YOUR ANSWER'), ' Idempotent ')
+    await user.type(screen.getByLabelText('你的答案'), ' Idempotent ')
     await user.click(screen.getByRole('button', { name: '检查答案' }))
 
     expect(onReview).toHaveBeenCalledWith(sampleCard, true)

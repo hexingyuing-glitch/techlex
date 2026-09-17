@@ -43,6 +43,12 @@ export async function generateCard(term, contextSentence) {
     context: cleanField(data, 'context'),
     contextZh: cleanField(data, 'contextZh'),
     sourceSentence: cleanSentence.slice(0, 1000),
+    contentSource:
+      import.meta.env.VITE_USE_MOCK_API === 'true'
+        ? data.contentSource === 'demo'
+          ? 'demo'
+          : 'placeholder'
+        : 'ai',
     createdAt: new Date().toISOString(),
     reviewWeight: 1,
     wrongCount: 0,

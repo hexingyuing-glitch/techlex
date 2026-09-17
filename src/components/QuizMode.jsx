@@ -1,109 +1,207 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useState } from 'react'
 import {
   normalizeAnswer,
   selectWeightedCard,
 } from '../logic/spacedRepetition.js'
+import Icon from './Icon.jsx'
+import SourceBadge from './SourceBadge.jsx'
 
-function maskTerm(example, term) {
+export function maskTerm(example, term) {
   if (!example || !term) return example
   const patterns = [
     term,
     ...term.split(/\s+/).filter((word) => word.length >= 4),
   ].sort((a, b) => b.length - a.length)
+  return patterns.reduce(
+    (masked, pattern) =>
+      masked.replace(
+        new RegExp(pattern.replace(/[.*+?^$()|[\]\\{}]/g, '\\$&'), 'gi'),
+        '________',
+      ),
+    example,
+  )
+}
 
-  return patterns.reduce((masked, pattern) => {
-    const escaped = pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    return masked.replace(new RegExp(escaped, 'gi'), '________')
-  }, example)
+function createRound(cards) {
+  const remaining = cards.filter((card) => card.contentSource !== 'placeholder')
+  const round = []
+  while (remaining.length && round.length < 10) {
+    const card = selectWeightedCard(remaining)
+    round.push(card)
+    remaining.splice(
+      remaining.findIndex((item) => item.id === card.id),
+      1,
+    )
+  }
+  return round
 }
 
 export default function QuizMode({ cards, onReview, onBack }) {
-  const [currentId, setCurrentId] = useState(cards[0]?.id ?? null)
+  const [round, setRound] = useState(() => createRound(cards))
+  const [index, setIndex] = useState(0)
   const [answer, setAnswer] = useState('')
   const [result, setResult] = useState(null)
-
-  const currentCard = useMemo(
-    () => cards.find((card) => card.id === currentId) ?? cards[0] ?? null,
-    [cards, currentId],
-  )
-
-  useEffect(() => {
-    if (cards.length > 0 && !cards.some((card) => card.id === currentId)) {
-      setCurrentId(cards[0].id)
-      setAnswer('')
-      setResult(null)
-    }
-  }, [cards, currentId])
-
-  function handleSubmit(event) {
-    event.preventDefault()
-    if (!currentCard || !answer.trim() || result) return
-
-    const isCorrect =
-      normalizeAnswer(answer) === normalizeAnswer(currentCard.term)
-    onReview(currentCard, isCorrect)
-    setResult(isCorrect ? 'correct' : 'incorrect')
-  }
-
-  function handleNext() {
-    const nextCard = selectWeightedCard(cards, {
-      excludeId: cards.length > 1 ? currentCard?.id : undefined,
-    })
-    setCurrentId(nextCard?.id ?? null)
+  const [answers, setAnswers] = useState([])
+  const [hint, setHint] = useState(false)
+  const [saveError, setSaveError] = useState('')
+  const current = round[index]
+  const finished = round.length > 0 && index >= round.length
+  function restart() {
+    setRound(createRound(cards))
+    setIndex(0)
     setAnswer('')
     setResult(null)
+    setAnswers([])
+    setHint(false)
+    setSaveError('')
   }
-
-  if (cards.length === 0) {
+  function submit(isCorrect) {
+    if (!current || result) return
+    const saved = onReview(current, isCorrect)
+    if (saved === false) {
+      setSaveError('本次结果未保存，请处理存储错误后重试。')
+      return
+    }
+    setSaveError('')
+    setResult(isCorrect ? 'correct' : 'incorrect')
+    setAnswers((previous) => [
+      ...previous,
+      { card: current, correct: isCorrect },
+    ])
+  }
+  if (!round.length)
     return (
-      <section className="quiz-empty">
-        <p className="step-label">REVIEW MODE</p>
+      <div className="empty-state quiz-empty">
+        <span className="empty-icon">
+          <Icon name="review" size={32} />
+        </span>
         <h1>还没有可以复习的卡片</h1>
-        <p>先回到卡片库，从一段技术文本生成术语卡片。</p>
-        <button type="button" className="primary-button" onClick={onBack}>
-          返回卡片库
+        <p>先收集一些表达。演示占位卡片不会进入复习。</p>
+        <button className="primary-button" onClick={onBack}>
+          返回词库
         </button>
+      </div>
+    )
+  if (finished)
+    return (
+      <section className="round-summary">
+        <span className="empty-icon">
+          <Icon name="check" size={34} />
+        </span>
+        <p className="eyebrow">A LITTLE PROGRESS, WELL KEPT</p>
+        <h1>
+          这一轮，完成了<span className="brand-dot">。</span>
+        </h1>
+        <p>今天多熟悉一个表达，下一次阅读就少一点停顿。</p>
+        <div className="summary-metrics">
+          <div>
+            <strong>{round.length}</strong>
+            <span>本轮复习</span>
+          </div>
+          <div>
+            <strong>{answers.filter((a) => a.correct).length}</strong>
+            <span>回答正确</span>
+          </div>
+          <div>
+            <strong>{answers.filter((a) => !a.correct).length}</strong>
+            <span>需要再练</span>
+          </div>
+        </div>
+        {answers.some((a) => !a.correct) && (
+          <div className="retry-words">
+            <h2>这些表达，值得再见一面</h2>
+            {answers
+              .filter((a) => !a.correct)
+              .map((a) => (
+                <span key={a.card.id}>{a.card.term}</span>
+              ))}
+          </div>
+        )}
+        <div className="button-row">
+          <button className="primary-button" onClick={restart}>
+            再练一轮 <Icon name="arrow" size={17} />
+          </button>
+          <button className="secondary-button" onClick={onBack}>
+            回到词库
+          </button>
+        </div>
       </section>
     )
-  }
-
   return (
-    <section className="quiz-shell" aria-labelledby="quiz-title">
-      <div className="quiz-header">
+    <section className="quiz-shell">
+      <div className="page-heading">
         <div>
-          <p className="step-label">REVIEW / WEIGHTED PRACTICE</p>
-          <h1 id="quiz-title">根据定义写出术语</h1>
+          <p className="eyebrow">A MOMENT TO RECALL</p>
+          <h1>
+            给记忆一点时间<span className="brand-dot">。</span>
+          </h1>
+          <p>先试着回想，想不起来也没关系。</p>
         </div>
-        <span>{cards.length} CARDS</span>
+        <button className="text-button" onClick={onBack}>
+          退出本轮
+        </button>
       </div>
-
-      <article className="quiz-card">
-        <div className="quiz-number">?</div>
-        <p className="quiz-translation">
-          {currentCard.translation || '根据下面的双语解释作答'}
-        </p>
-        <p className="quiz-definition-zh">
-          {currentCard.definitionZh || '中文解释待补充'}
-        </p>
-        <p className="quiz-definition">{currentCard.definition}</p>
-        <p className="quiz-context">
-          {currentCard.contextZh || currentCard.context}
-        </p>
-        <blockquote>{maskTerm(currentCard.example, currentCard.term)}</blockquote>
-
-        <form onSubmit={handleSubmit}>
-          <label htmlFor="quiz-answer">YOUR ANSWER</label>
+      <div className="quiz-progress">
+        <span>本轮进度</span>
+        <strong>
+          {index + 1} / {round.length}
+        </strong>
+      </div>
+      <progress
+        aria-label="本轮已完成"
+        value={index + (result ? 1 : 0)}
+        max={round.length}
+      />
+      <article className="quiz-card" key={current.id}>
+        <div className="card-topline">
+          <span className="quiet-label">RECALL THE EXPRESSION</span>
+          <SourceBadge source={current.contentSource} />
+        </div>
+        <p className="quiz-prompt">根据定义，写出英文表达</p>
+        <h2 className="quiz-definition">
+          {maskTerm(current.definition, current.term)}
+        </h2>
+        <button
+          className="text-button hint-button"
+          aria-expanded={hint}
+          onClick={() => setHint(!hint)}
+        >
+          {hint ? '收起中文提示' : '需要一点中文提示？'}
+        </button>
+        {hint && (
+          <p className="hint-copy">
+            {maskTerm(
+              current.definitionZh || current.translation || '暂无中文提示',
+              current.term,
+            )}
+          </p>
+        )}
+        {current.example && (
+          <blockquote className="quiz-context">
+            <span>在句子里想一想</span>
+            {maskTerm(current.example, current.term)}
+          </blockquote>
+        )}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+            if (answer.trim())
+              submit(normalizeAnswer(answer) === normalizeAnswer(current.term))
+          }}
+        >
+          <label htmlFor="quiz-answer">你的答案</label>
           <div className="answer-row">
             <input
               id="quiz-answer"
+              autoComplete="off"
+              autoCapitalize="none"
+              spellCheck={false}
               value={answer}
               disabled={Boolean(result)}
-              autoComplete="off"
-              onChange={(event) => setAnswer(event.target.value)}
-              placeholder="Type the technical term…"
+              placeholder="写下你想到的英文术语…"
+              onChange={(e) => setAnswer(e.target.value)}
             />
             <button
-              type="submit"
               className="primary-button"
               disabled={!answer.trim() || Boolean(result)}
             >
@@ -111,28 +209,50 @@ export default function QuizMode({ cards, onReview, onBack }) {
             </button>
           </div>
         </form>
-
-        {result ? (
-          <div
-            className={`quiz-result ${result}`}
-            role="status"
-            aria-live="polite"
+        {!result && (
+          <button
+            className="text-button forget-button"
+            onClick={() => submit(false)}
           >
+            暂时想不起来，看看答案
+          </button>
+        )}
+        {saveError && (
+          <p className="inline-error" role="alert">
+            {saveError}
+          </p>
+        )}
+        {result && (
+          <div className={'quiz-result ' + result} role="status">
             <div>
-              <strong>{result === 'correct' ? '回答正确' : '再记一次'}</strong>
-              <span>
-                正确术语：<b>{currentCard.term}</b>
-              </span>
+              <strong>
+                {result === 'correct' ? '回答正确' : '再记一次，下次会更熟悉'}
+              </strong>
+              <p>
+                {current.term} <span>· {current.translation}</span>
+              </p>
+              {current.sourceSentence && (
+                <p className="answer-source">{current.sourceSentence}</p>
+              )}
             </div>
-            <button type="button" onClick={handleNext}>
-              下一张 →
+            <button
+              className="primary-button"
+              onClick={() => {
+                setIndex(index + 1)
+                setAnswer('')
+                setResult(null)
+                setHint(false)
+                setSaveError('')
+              }}
+            >
+              {index + 1 === round.length ? '查看本轮总结' : '下一张'}
+              <Icon name="arrow" size={16} />
             </button>
           </div>
-        ) : null}
+        )}
       </article>
-
       <p className="quiz-note">
-        答错的卡片会提高复习权重，因此更可能再次出现。
+        本轮不重复抽题 · 每轮最多 10 张 · 练习记录实时保存
       </p>
     </section>
   )
